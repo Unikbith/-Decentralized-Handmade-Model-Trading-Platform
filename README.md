@@ -1,5 +1,5 @@
 # 分布式手办模型交易平台  
-## 基于Vue3+Flask的全栈电商交易平台，使用了MySQL、Elasticsearch、MinIOn、Celery、Redis等中间件，接入了智谱的GLM-4.5-Air大模型，能够实现AI智能客服的功能。
+## 基于Vue3+Flask的全栈电商交易平台，使用了MySQL、Elasticsearch、MinIO、Celery、Redis等中间件，接入了智谱的GLM-4.5-Air大模型，能够实现AI智能客服的功能。
 ### 2025.10-2026.05
 ~~**也算是自己第一次做的比较大且全面的项目，开发过程中遇到了很多问题比如说（跨域问题、JWT Token过期处理、库存超卖、路由权限守卫等），也让我认识到了自己的不足，还需要更多实际动手的开发经验**~~
 ***  
