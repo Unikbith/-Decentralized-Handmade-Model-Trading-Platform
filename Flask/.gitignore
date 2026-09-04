@@ -1,0 +1,14 @@
+﻿
+# 敏感文件：本地加密密钥，绝不提交
+secret.key
+
+# Python 缓存与虚拟环境
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# IDE
+.idea/
+.vscode/
+

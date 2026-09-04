@@ -3619,32 +3619,37 @@ def monitor_product_ranking():
 @app.route('/api/admin/monitor/order-overview', methods=['GET'])
 @admin_required
 def monitor_order_overview():
-    """订单交易概览：从MySQL快照读取"""
+    """订单交易概览：实时从订单表计算"""
     try:
-        snapshots = OrderStatusSnapshot.query.all()
-        if not snapshots:
-            # 快照为空时实时计算一次并写入，使用Redis锁防止并发重复刷新
-            lock_key = 'monitor:order_status:refresh_lock'
-            if redis_client.set(lock_key, '1', nx=True, ex=60):
-                try:
-                    scheduled_refresh_order_status()
-                    snapshots = OrderStatusSnapshot.query.all()
-                finally:
-                    redis_client.delete(lock_key)
-            else:
-                # 其他请求正在刷新，等待后读取
-                import time
-                time.sleep(0.5)
-                snapshots = OrderStatusSnapshot.query.all()
+        today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
 
-        status_dist = [{'name': s.status_name, 'value': s.count} for s in snapshots]
-        today_orders = snapshots[0].today_orders if snapshots else 0
-        today_revenue = snapshots[0].today_revenue if snapshots else 0.0
+        # 1. 今日所有订单
+        today_orders = Order.query.filter(Order.created_at >= today_start).all()
+        today_order_count = len(today_orders)
+
+        # 2. 今日交易额（已付款/发货/收货/完成的订单）
+        paid_statuses = ('pending_ship', 'pending_receive', 'completed')
+        today_revenue = sum(
+            float(o.total_price) for o in today_orders if o.status in paid_statuses
+        )
+
+        # 3. 今日订单状态分布
+        status_labels = {
+            'pending_pay': '待付款', 'pending_ship': '待发货',
+            'pending_receive': '待收货', 'completed': '已完成',
+            'cancelled': '已取消', 'refund': '退款中', 'refunded': '已退款'
+        }
+        status_map = {}
+        for o in today_orders:
+            label = status_labels.get(o.status, o.status)
+            status_map[label] = status_map.get(label, 0) + 1
+
+        status_dist = [{'name': name, 'value': count} for name, count in status_map.items()]
 
         return jsonify({
             'code': 200,
             'data': {
-                'today_orders': today_orders,
+                'today_orders': today_order_count,
                 'today_revenue': round(today_revenue, 2),
                 'status_distribution': status_dist
             }
@@ -3707,9 +3712,9 @@ def scheduled_refresh_search_keywords():
 
 
 # 每24小时刷新订单状态快照
-@scheduler.task('interval', id='refresh_order_status_task', hours=24, misfire_grace_time=3600)
+@scheduler.task('interval', id='refresh_order_status_task', minutes=5, misfire_grace_time=300)
 def scheduled_refresh_order_status():
-    """每24小时执行一次，统计今日订单状态分布并持久化到MySQL"""
+    """每5分钟执行一次，统计今日订单状态分布并持久化到MySQL（快照表备用）"""
     try:
         today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
         today_orders = Order.query.filter(Order.created_at >= today_start).all()
