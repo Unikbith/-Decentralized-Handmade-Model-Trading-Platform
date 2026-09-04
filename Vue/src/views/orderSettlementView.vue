@@ -60,73 +60,57 @@
     </div>
 
     <!--地址编辑弹窗-->
-    <div v-if="showAddressModal" class="modal-mask" @click.self="closeAddressModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>{{ hasAddress ? '编辑收货地址' : '添加收货地址' }}</h3>
-          <span class="close-btn" @click="closeAddressModal">×</span>
-        </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label>收货人</label>
-            <input type="text" v-model="addressForm.name" placeholder="请输入收货人姓名"/>
-          </div>
-          <div class="form-group">
-            <label>手机号码</label>
-            <input type="text" v-model="addressForm.phone" placeholder="请输入手机号码" maxlength="11"/>
-          </div>
-          <div class="form-group">
-            <label>所在地区</label>
-            <div class="area-selects">
-              <select v-model="selectedProvince" @change="onProvinceChange">
-                <option value="">请选择省</option>
-                <option v-for="p in provinces" :key="p.value" :value="p.value">{{ p.label }}</option>
-              </select>
-              <select v-model="selectedCity" @change="onCityChange" :disabled="!selectedProvince">
-                <option value="">请选择市</option>
-                <option v-for="c in cities" :key="c.value" :value="c.value">{{ c.label }}</option>
-              </select>
-              <select v-model="selectedDistrict" :disabled="!selectedCity">
-                <option value="">请选择区</option>
-                <option v-for="d in districts" :key="d.value" :value="d.value">{{ d.label }}</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>详细地址</label>
-            <textarea v-model="addressForm.detail" placeholder="请输入详细地址" rows="3"></textarea>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="cancel-btn" @click="closeAddressModal">取消</button>
-          <button class="confirm-btn" @click="saveAddress">保存</button>
+    <AppDialog v-model="showAddressModal" :title="hasAddress ? '编辑收货地址' : '添加收货地址'">
+      <div class="form-group">
+        <label>收货人</label>
+        <input type="text" v-model="addressForm.name" placeholder="请输入收货人姓名"/>
+      </div>
+      <div class="form-group">
+        <label>手机号码</label>
+        <input type="text" v-model="addressForm.phone" placeholder="请输入手机号码" maxlength="11"/>
+      </div>
+      <div class="form-group">
+        <label>所在地区</label>
+        <div class="area-selects">
+          <select v-model="selectedProvince" @change="onProvinceChange">
+            <option value="">请选择省</option>
+            <option v-for="p in provinces" :key="p.value" :value="p.value">{{ p.label }}</option>
+          </select>
+          <select v-model="selectedCity" @change="onCityChange" :disabled="!selectedProvince">
+            <option value="">请选择市</option>
+            <option v-for="c in cities" :key="c.value" :value="c.value">{{ c.label }}</option>
+          </select>
+          <select v-model="selectedDistrict" :disabled="!selectedCity">
+            <option value="">请选择区</option>
+            <option v-for="d in districts" :key="d.value" :value="d.value">{{ d.label }}</option>
+          </select>
         </div>
       </div>
-    </div>
+      <div class="form-group">
+        <label>详细地址</label>
+        <textarea v-model="addressForm.detail" placeholder="请输入详细地址" rows="3"></textarea>
+      </div>
+      <template #footer>
+        <button class="cancel-btn" @click="closeAddressModal">取消</button>
+        <button class="confirm-btn" @click="saveAddress">保存</button>
+      </template>
+    </AppDialog>
 
     <!--支付弹窗-->
-    <div v-if="showPayModal" class="modal-mask" @click.self="closePayModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>扫码支付</h3>
-          <span class="close-btn" @click="closePayModal">×</span>
-        </div>
-        <div class="modal-body">
-          <p class="pay-tip">请使用手机扫描下方二维码完成支付</p>
-          <p class="pay-amount">支付金额：<span>¥{{ finalPrice }}</span></p>
-          <p class="order-no">订单号：{{ currentOrderNo }}</p>
-          <div class="qrcode"><canvas id="qrcodeImg" style="width: 200px; height: 200px;"></canvas></div>
-          <p class="scan-tip">扫码后在手机上点击确认支付</p>
-          <p class="tip">订单将在1分钟后自动取消，请尽快完成支付</p>
-        </div>
-        <div class="modal-footer">
-          <button class="cancel-btn" @click="closePayModal">取消</button>
-          <button class="confirm-btn" @click="simulatePay" :disabled="isPaying">
-            {{ isPaying ? '正在处理支付...' : '模拟支付成功' }}
-          </button>
-        </div>
-      </div>
-    </div>
+    <AppDialog :model-value="showPayModal" title="扫码支付" @update:model-value="closePayModal">
+      <p class="pay-tip">请使用手机扫描下方二维码完成支付</p>
+      <p class="pay-amount">支付金额：<span>¥{{ finalPrice }}</span></p>
+      <p class="order-no">订单号：{{ currentOrderNo }}</p>
+      <div class="qrcode"><canvas id="qrcodeImg" style="width: 200px; height: 200px;"></canvas></div>
+      <p class="scan-tip">扫码后在手机上点击确认支付</p>
+      <p class="tip">订单将在1分钟后自动取消，请尽快完成支付</p>
+      <template #footer>
+        <button class="cancel-btn" @click="closePayModal">取消</button>
+        <button class="confirm-btn" @click="simulatePay" :disabled="isPaying">
+          {{ isPaying ? '正在处理支付...' : '模拟支付成功' }}
+        </button>
+      </template>
+    </AppDialog>
   </div>
 </template>
 
@@ -677,57 +661,7 @@ onMounted(() => {
   cursor: not-allowed;
 }
 
-/* ===== 弹窗样式 ===== */
-.modal-mask {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
-
-.modal-content {
-  background: #fff;
-  border-radius: 12px;
-  width: 420px;
-  max-width: 90%;
-  overflow: hidden;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 18px;
-  color: #333;
-}
-
-.close-btn {
-  font-size: 24px;
-  color: #999;
-  cursor: pointer;
-  line-height: 1;
-}
-
-.modal-body {
-  padding: 20px;
-}
-
-.form-group {
-  margin-bottom: 15px;
-}
-
+/* ===== 弹窗表单 ===== */
 .form-group label {
   display: block;
   margin-bottom: 5px;
@@ -750,11 +684,6 @@ onMounted(() => {
 .form-group input:focus,
 .form-group textarea:focus {
   border-color: #fb7299;
-}
-
-.modal-footer {
-  display: flex;
-  border-top: 1px solid #f0f0f0;
 }
 
 .modal-footer button {
@@ -841,7 +770,5 @@ onMounted(() => {
   .submit-section { text-align: center; }
   .submit-btn { width: 100%; padding: 14px 0; }
   .area-selects { flex-direction: column; gap: 8px; }
-  .modal-content { width: 95%; }
-  .modal-body { padding: 16px; }
 }
 </style>

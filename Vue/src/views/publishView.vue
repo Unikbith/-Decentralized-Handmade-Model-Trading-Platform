@@ -3,134 +3,117 @@
     <div class="container">
       <h1 class="page-title">{{ editingGoodsId ? '编辑商品' : '商品上架' }}</h1>
       <div class="publish-form">
-        <!--商品图片上传-->
-        <div class="form-group">
-          <label class="form-label">商品图片</label>
-          <div class="image-upload-area">
-            <div class="image-preview-list">
-              <div class="image-item" v-for="(url, index) in imageList" :key="index">
-                <img :src="url" alt="商品图" class="preview-img">
-                <button class="delete-btn" @click="deleteImage(index)">×</button>
+        <el-form ref="formRef" :model="form" :rules="rules" class="goods-form" label-position="top" @submit.prevent>
+          <!--商品图片上传-->
+          <el-form-item label="商品图片">
+            <el-upload
+              v-model:file-list="imageList"
+              list-type="picture-card"
+              accept="image/*"
+              :limit="10"
+              :http-request="onUploadRequest"
+              :before-upload="beforeUpload"
+              :on-exceed="handleExceed"
+            >
+              <div class="upload-trigger">
+                <span class="plus">+</span>
+                <span>上传图片</span>
               </div>
-              <div class="upload-box" v-if="imageList.length < 10">
-                <input type="file" id="file-upload" accept="image/*" @change="handleImageUpload" hidden multiple>
-                <label for="file-upload" class="upload-label">
-                  <span class="plus">+</span>
-                  <span>上传图片</span>
-                </label>
-              </div>
-            </div>
-            <p class="tips">最多上传10张图片，第一张为主图</p>
-          </div>
-        </div>
+            </el-upload>
+            <div class="tips">最多上传10张图片，第一张为主图</div>
+          </el-form-item>
 
-        <!--基础信息表单-->
-        <div class="form-row">
-          <div class="form-group half">
-            <label class="form-label">商品名称 <span class="required">*</span></label>
-            <input type="text" class="form-input" v-model="form.name" placeholder="请输入商品名称">
+          <!--基础信息表单-->
+          <div class="form-row">
+            <el-form-item class="half" label="商品名称" prop="name">
+              <el-input v-model="form.name" placeholder="请输入商品名称" />
+            </el-form-item>
+            <el-form-item class="half" label="价格（元）" prop="price">
+              <el-input v-model="form.price" placeholder="请输入价格" min="0.01" step="0.01" />
+            </el-form-item>
           </div>
-          <div class="form-group half">
-            <label class="form-label">价格（元） <span class="required">*</span></label>
-            <input type="number" class="form-input" v-model="form.price" placeholder="请输入价格" min="0.01" step="0.01">
-          </div>
-        </div>
 
-        <div class="form-row">
-          <div class="form-group half">
-            <label class="form-label">库存 <span class="required">*</span></label>
-            <input type="number" class="form-input" v-model="form.stock" placeholder="请输入库存" min="1" step="1">
+          <div class="form-row">
+            <el-form-item class="half" label="库存" prop="stock">
+              <el-input v-model="form.stock" placeholder="请输入库存" min="1" step="1" />
+            </el-form-item>
+            <el-form-item class="half" label="所属IP">
+              <el-input v-model="form.ip" placeholder="请输入所属IP/作品" />
+            </el-form-item>
           </div>
-          <div class="form-group half">
-            <label class="form-label">所属IP</label>
-            <input type="text" class="form-input" v-model="form.ip" placeholder="请输入所属IP/作品">
-          </div>
-        </div>
 
-        <div class="form-row">
-          <div class="form-group half">
-            <label class="form-label">角色</label>
-            <input type="text" class="form-input" v-model="form.character" placeholder="请输入角色名称">
+          <div class="form-row">
+            <el-form-item class="half" label="角色">
+              <el-input v-model="form.character" placeholder="请输入角色名称" />
+            </el-form-item>
+            <el-form-item class="half" label="商品状态" prop="status">
+              <el-select v-model="form.status" placeholder="请选择商品状态" class="full-select">
+                <el-option label="现货" value="现货" />
+                <el-option label="预售" value="预售" />
+              </el-select>
+            </el-form-item>
           </div>
-          <div class="form-group half">
-            <label class="form-label">商品状态 <span class="required">*</span></label>
-            <select class="form-input" v-model="form.status">
-              <option value="" disabled>请选择商品状态</option>
-              <option value="现货">现货</option>
-              <option value="预售">预售</option>
-            </select>
+
+          <div class="form-row">
+            <el-form-item class="half" label="分类" prop="category">
+              <el-select v-model="form.category" placeholder="请选择商品分类" class="full-select" @change="handleCategoryChange">
+                <el-option v-for="c in categories" :key="c" :label="c" :value="c" />
+              </el-select>
+            </el-form-item>
+            <el-form-item class="half" label="品牌">
+              <el-input v-model="form.brand" placeholder="请输入品牌/厂商" />
+            </el-form-item>
           </div>
-        </div>
 
-        <div class="form-row">
-          <div class="form-group half">
-            <label class="form-label">分类 <span class="required">*</span></label>
-            <select class="form-input" v-model="form.category" @change="handleCategoryChange">
-              <option value="" disabled>请选择商品分类</option>
-              <option value="景品">景品</option>
-              <option value="Q版手办">Q版手办</option>
-              <option value="可动手办">可动手办</option>
-              <option value="盒蛋">盒蛋</option>
-              <option value="雕像">雕像</option>
-              <option value="拼装模型">拼装模型</option>
-              <option value="原创/同人作品">原创/同人作品</option>
-              <option value="GK白模/手办">GK白模/手办</option>
-              <option value="其他">其他</option>
-            </select>
+          <!--自定义分类输入框-->
+          <div class="form-row" v-if="form.category === '其他'">
+            <el-form-item class="half" label="自定义分类" prop="customCategory">
+              <el-input v-model="form.customCategory" placeholder="请输入自定义分类名称" />
+            </el-form-item>
           </div>
-          <div class="form-group half">
-            <label class="form-label">品牌</label>
-            <input type="text" class="form-input" v-model="form.brand" placeholder="请输入品牌/厂商">
+
+          <el-form-item label="商品简介">
+            <el-input
+              v-model="form.description"
+              type="textarea"
+              :rows="3"
+              placeholder="请输入商品简介，用于列表展示"
+              resize="vertical"
+            />
+          </el-form-item>
+
+          <!--提交按钮-->
+          <div class="submit-area">
+            <el-button class="goods-submit" :loading="loading" @click="handleSubmit">
+              {{ loading ? '提交中...' : (editingGoodsId ? '保存修改' : '发布商品') }}
+            </el-button>
           </div>
-        </div>
-
-        <!--自定义分类输入框-->
-        <div class="form-row" v-if="form.category === '其他'">
-          <div class="form-group half">
-            <label class="form-label">自定义分类 <span class="required">*</span></label>
-            <input type="text" class="form-input" v-model="form.customCategory" placeholder="请输入自定义分类名称">
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">商品简介</label>
-          <textarea class="form-textarea" v-model="form.description" placeholder="请输入商品简介，用于列表展示" rows="3"></textarea>
-        </div>
-
-        <!--提交按钮-->
-        <div class="submit-area">
-          <button class="submit-btn" @click="handleSubmit" :disabled="loading">
-            {{ loading ? '提交中...' : (editingGoodsId ? '保存修改' : '发布商品') }}
-          </button>
-        </div>
-
-        <!--提示信息-->
-        <div v-if="message" class="message" :class="{'error': isError}">
-          {{ message }}
-        </div>
+        </el-form>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+// ===== 导入依赖 =====
+import { ref, reactive, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import { ElMessage } from 'element-plus';
 import request from '@/api/request';
 
 const router = useRouter();
 const route = useRoute();
+const formRef = ref();
 
-//响应式数据定义
+// ===== 响应式数据定义 =====
 const loading = ref(false);
-const message = ref('');
-const isError = ref(false);
 const editingGoodsId = ref(null);
 const merchantApplyStatus = ref('none');
-
 const imageList = ref([]);
+const presetCategories = ['景品', 'Q版手办', '可动手办', '盒蛋', '雕像', '拼装模型', '原创/同人作品', 'GK白模/手办'];
+const categories = [...presetCategories, '其他'];
 
-const form = ref({
+const form = reactive({
   name: '',
   price: '',
   stock: 1,
@@ -143,14 +126,88 @@ const form = ref({
   description: '',
 });
 
-//分类切换处理
-const handleCategoryChange = () => {
-  if (form.value.category !== '其他') {
-    form.value.customCategory = '';
+// ===== 自定义校验：上传至少一张图片 =====
+function validateImages(rule, value, callback) {
+  if (imageList.value.length === 0) {
+    callback(new Error('请至少上传一张商品图片'));
+  } else {
+    callback();
+  }
+}
+
+// ===== 表单验证规则 =====
+const rules = {
+  name: [{ required: true, message: '请输入商品名称', trigger: 'blur' }],
+  price: [{ required: true, message: '请输入正确的价格', trigger: 'blur' }],
+  status: [{ required: true, message: '请选择商品状态', trigger: 'change' }],
+  category: [{ required: true, message: '请选择商品分类', trigger: 'change' }],
+  customCategory: [
+    {
+      validator: (rule, value, callback) => {
+        if (form.category === '其他' && !value?.trim()) {
+          callback(new Error('请输入自定义分类名称'));
+        } else {
+          callback();
+        }
+      },
+      trigger: 'blur'
+    }
+  ],
+  images: [{ validator: validateImages, trigger: 'change' }]
+};
+
+// ===== 图片上传触发 =====
+const handleExceed = (files, fileList) => {
+  ElMessage.warning('最多只能上传10张图片');
+};
+
+// ===== 上传前校验：单张大小 =====
+const beforeUpload = (file) => {
+  if (file.size > 5 * 1024 * 1024) {
+    ElMessage.warning(`图片 ${file.name} 超过5MB，已跳过`);
+    return false;
+  }
+  return true;
+};
+
+// ===== 自定义上传请求（保持原有上传逻辑） =====
+const onUploadRequest = async (options) => {
+  const token = sessionStorage.getItem('token');
+  if (!token) {
+    ElMessage.error('请先登录！');
+    options.onError(new Error('未登录'));
+    router.push('/login');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('file', options.file);
+
+  try {
+    const response = await request.post('/api/upload/image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    if (response.data.code === 200) {
+      // 回填 URL 以便预览图正常展示
+      options.file.url = response.data.url;
+      options.file.status = 'success';
+      options.onSuccess(response.data);
+    } else {
+      options.onError(new Error(response.data.msg || '上传失败'));
+    }
+  } catch (error) {
+    options.onError(new Error(error.response?.data?.msg || '网络异常，上传失败'));
   }
 };
 
-//从Token解析角色
+// ===== 分类切换处理 =====
+const handleCategoryChange = () => {
+  if (form.category !== '其他') {
+    form.customCategory = '';
+  }
+};
+
+// ===== 从Token解析角色 =====
 const getRoleFromToken = () => {
   const token = sessionStorage.getItem('token');
   if (!token) return '';
@@ -162,7 +219,7 @@ const getRoleFromToken = () => {
   }
 };
 
-//获取商家入驻状态
+// ===== 获取商家入驻状态 =====
 const getMerchantApplyStatus = async () => {
   if (getRoleFromToken() !== 'merchant') return;
   try {
@@ -175,7 +232,7 @@ const getMerchantApplyStatus = async () => {
   }
 };
 
-//生命周期钩子
+// ===== 生命周期钩子 =====
 onMounted(() => {
   const goodsId = route.query.id;
   if (goodsId) {
@@ -185,16 +242,15 @@ onMounted(() => {
   getMerchantApplyStatus();
 });
 
-//API请求方法：获取商品详情用于编辑
+// ===== API请求方法：获取商品详情用于编辑 =====
 const getGoodsDetail = async (id) => {
   try {
     const res = await request.get(`/api/goods/detail/${id}`);
     if (res.data.code === 200) {
       const data = res.data.data;
-      const presetCategories = ['景品', 'Q版手办', '可动手办', '盒蛋', '雕像', '拼装模型', '原创/同人作品', 'GK白模/手办'];
       const isPresetCategory = presetCategories.includes(data.category);
-      
-      form.value = {
+
+      Object.assign(form, {
         name: data.name,
         price: data.price,
         stock: data.stock,
@@ -205,184 +261,91 @@ const getGoodsDetail = async (id) => {
         customCategory: isPresetCategory ? '' : data.category,
         brand: data.brand,
         description: data.description,
-      };
-      imageList.value = data.images;
+      });
+      imageList.value = data.images.map(url => ({ name: url, url }));
     } else {
-      showMessage(res.data.msg || '获取商品详情失败', true);
+      ElMessage.error(res.data.msg || '获取商品详情失败');
     }
   } catch (error) {
-    showMessage('网络错误，获取商品详情失败', true);
+    ElMessage.error('网络错误，获取商品详情失败');
   }
 };
 
-//图片上传方法
-const handleImageUpload = async (e) => {
-  const files = e.target.files;
-  if (!files || files.length === 0) return;
+// ===== 清空表单（发布成功后重置） =====
+function resetForm() {
+  Object.assign(form, {
+    name: '', price: '', stock: 1, ip: '', character: '',
+    status: '', category: '', customCategory: '', brand: '', description: '',
+  });
+  imageList.value = [];
+  editingGoodsId.value = null;
+}
 
-  const token = sessionStorage.getItem('token');
-  if (!token) {
-    showMessage('请先登录！', true);
-    router.push('/login');
-    return;
-  }
+// ===== 表单提交（支持新增和更新） =====
+const handleSubmit = async () => {
+  formRef.value.validate(async (valid) => {
+    if (!valid) return;
 
-  loading.value = true;
-  let successCount = 0;
-  let failCount = 0;
-
-  for (const file of files) {
-    if (file.size > 5 * 1024 * 1024) {
-      showMessage(`图片 ${file.name} 超过5MB，已跳过`, true);
-      failCount++;
-      continue;
+    const token = sessionStorage.getItem('token');
+    if (!token) {
+      ElMessage.error('请先登录！');
+      router.push('/login');
+      return;
     }
 
-    const formData = new FormData();
-    formData.append('file', file);
+    // 商家入驻状态校验
+    if (getRoleFromToken() === 'merchant' && !editingGoodsId.value) {
+      if (merchantApplyStatus.value === 'none') {
+        ElMessage.warning('请先提交入驻申请，等待管理员审核通过后再发布商品');
+        return;
+      } else if (merchantApplyStatus.value === 'pending') {
+        ElMessage.warning('您的入驻申请正在审核中，请等待管理员审核通过');
+        return;
+      } else if (merchantApplyStatus.value === 'rejected') {
+        ElMessage.warning('您的入驻申请已被拒绝，无法发布商品，如有疑问请联系管理员');
+        return;
+      }
+    }
+
+    loading.value = true;
 
     try {
-      const response = await request.post('/api/upload/image', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+      const actualCategory = form.category === '其他' ? form.customCategory.trim() : form.category;
+      const payload = {
+        name: form.name,
+        price: form.price,
+        stock: form.stock,
+        ip: form.ip,
+        character: form.character,
+        status: form.status,
+        category: actualCategory,
+        brand: form.brand,
+        description: form.description,
+        images: imageList.value.map(f => f.url)
+      };
+
+      const url = editingGoodsId.value
+        ? `/api/goods/update/${editingGoodsId.value}`
+        : '/api/goods/publish';
+
+      const response = await request.post(url, payload);
 
       if (response.data.code === 200) {
-        imageList.value.push(response.data.url);
-        successCount++;
+        ElMessage.success(editingGoodsId.value ? '商品更新成功！' : '商品上架成功！');
+        resetForm();
+        setTimeout(() => {
+          router.push('/profile');
+        }, 1500);
       } else {
-        failCount++;
-        console.error('单张图片上传失败：', response.data.msg);
+        ElMessage.error(response.data.msg || '操作失败');
       }
     } catch (error) {
-      failCount++;
-      const errMsg = error.response?.data?.msg || '网络异常，上传失败';
-      console.error('文件上传异常：', errMsg);
+      console.error('操作失败:', error);
+      ElMessage.error('网络错误，请稍后重试');
+    } finally {
+      loading.value = false;
     }
-  }
-
-  e.target.value = '';
-  loading.value = false;
-
-  if (successCount > 0 && failCount === 0) {
-    showMessage(`成功上传 ${successCount} 张图片`, false);
-  } else if (successCount > 0 && failCount > 0) {
-    showMessage(`成功${successCount}张，失败${failCount}张`, true);
-  } else {
-    showMessage('所有图片上传失败', true);
-  }
-};
-
-//删除图片
-const deleteImage = (index) => {
-  imageList.value.splice(index, 1);
-};
-
-//提示信息方法
-const showMessage = (msg, error = true) => {
-  message.value = msg;
-  isError.value = error;
-  setTimeout(() => {
-    message.value = '';
-  }, 3000);
-};
-
-// 表单提交（支持新增和更新）
-const handleSubmit = async () => {
-  if (!form.value.name.trim()) {
-    showMessage('请输入商品名称', true);
-    return;
-  }
-  if (!form.value.price || form.value.price <= 0) {
-    showMessage('请输入正确的价格', true);
-    return;
-  }
-  if (!form.value.status) {
-    showMessage('请选择商品状态', true);
-    return;
-  }
-  if (!form.value.category) {
-    showMessage('请选择商品分类', true);
-    return;
-  }
-  if (form.value.category === '其他' && !form.value.customCategory.trim()) {
-    showMessage('请输入自定义分类名称', true);
-    return;
-  }
-  if (imageList.value.length === 0) {
-    showMessage('请至少上传一张商品图片', true);
-    return;
-  }
-
-  const token = sessionStorage.getItem('token');
-  if (!token) {
-    showMessage('请先登录！', true);
-    router.push('/login');
-    return;
-  }
-
-  //商家入驻状态校验
-  if (getRoleFromToken() === 'merchant' && !editingGoodsId.value) {
-    if (merchantApplyStatus.value === 'none') {
-      showMessage('请先提交入驻申请，等待管理员审核通过后再发布商品', true);
-      return;
-    } else if (merchantApplyStatus.value === 'pending') {
-      showMessage('您的入驻申请正在审核中，请等待管理员审核通过', true);
-      return;
-    } else if (merchantApplyStatus.value === 'rejected') {
-      showMessage('您的入驻申请已被拒绝，无法发布商品，如有疑问请联系管理员', true);
-      return;
-    }
-  }
-
-  loading.value = true;
-  message.value = '';
-
-  try {
-    let url = '/api/goods/publish';
-    const actualCategory = form.value.category === '其他' ? form.value.customCategory.trim() : form.value.category;
-    const data = { 
-      ...form.value, 
-      category: actualCategory,
-      images: imageList.value 
-    };
-    delete data.customCategory;
-
-    if (editingGoodsId.value) {
-      url = `/api/goods/update/${editingGoodsId.value}`;
-    }
-
-    const response = await request.post(url, data);
-
-    if (response.data.code === 200) {
-      showMessage(editingGoodsId.value ? '商品更新成功！' : '商品上架成功！', false);
-      form.value = {
-        name: '',
-        price: '',
-        stock: 1,
-        ip: '',
-        character: '',
-        status: '',
-        category: '',
-        customCategory: '',
-        brand: '',
-        description: '',
-      };
-      imageList.value = [];
-      editingGoodsId.value = null;
-      setTimeout(() => {
-        router.push('/profile');
-      }, 1500);
-    } else {
-      showMessage(response.data.msg || '操作失败', true);
-    }
-  } catch (error) {
-    console.error('操作失败:', error);
-    showMessage('网络错误，请稍后重试', true);
-  } finally {
-    loading.value = false;
-  }
+  });
 };
 </script>
 
@@ -417,10 +380,6 @@ const handleSubmit = async () => {
   border: 1px solid #e5e5e5;
 }
 
-.form-group {
-  margin-bottom: 20px;
-}
-
 .form-row {
   display: flex;
   gap: 20px;
@@ -430,160 +389,102 @@ const handleSubmit = async () => {
   flex: 1;
 }
 
-.form-label {
-  display: block;
+/* ===== Element Plus 表单元素 · 统一为原 style ===== */
+.goods-form :deep(.el-form-item__label) {
   font-size: 13px;
   font-weight: 500;
   color: #0a0a0a;
-  margin-bottom: 8px;
   letter-spacing: 0.3px;
+  padding-bottom: 8px;
 }
-
-.required {
+.goods-form :deep(.el-form-item.is-required .el-form-item__label::before) {
   color: #ff6b9d;
 }
-
-/* ===== 表单输入框 ===== */
-.form-input,
-.form-textarea {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 12px 14px;
-  border: 1px solid #e5e5e5;
+.goods-form :deep(.el-input__wrapper),
+.goods-form :deep(.el-textarea__inner) {
+  background: #fff;
   border-radius: 8px;
+  box-shadow: 0 0 0 1px #e5e5e5 inset;
+  transition: box-shadow 0.2s ease;
+}
+.goods-form :deep(.el-input__wrapper:hover),
+.goods-form :deep(.el-textarea__inner:hover) {
+  box-shadow: 0 0 0 1px #ccc inset;
+}
+.goods-form :deep(.el-input__wrapper.is-focus) {
+  box-shadow: 0 0 0 1px #ff6b9d inset, 0 0 0 3px rgba(255, 107, 157, 0.15);
+}
+.goods-form :deep(.el-input__inner) {
   font-size: 14px;
   color: #0a0a0a;
-  outline: none;
-  transition: border-color 0.2s ease;
-  background: #fff;
 }
-
-.form-input:hover,
-.form-textarea:hover {
-  border-color: #ccc;
+.goods-form .full-select {
+  width: 100%;
 }
-
-.form-input:focus,
-.form-textarea:focus {
-  border-color: #ff6b9d;
+.goods-form :deep(.el-select__wrapper) {
+  border-radius: 8px;
+  box-shadow: 0 0 0 1px #e5e5e5 inset;
 }
-
-select.form-input {
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23666' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 14px center;
-  background-size: 12px 8px;
-  padding-right: 40px;
-  cursor: pointer;
+.goods-form :deep(.el-select__wrapper.is-focused) {
+  box-shadow: 0 0 0 1px #ff6b9d inset, 0 0 0 3px rgba(255, 107, 157, 0.15);
 }
-
-.form-textarea {
-  resize: vertical;
+.goods-form :deep(.el-textarea__inner) {
   font-family: inherit;
-  min-height: 100px;
+  resize: vertical;
 }
 
 /* ===== 图片上传区域 ===== */
-.image-upload-area {
+.tips {
+  font-size: 12px;
+  color: #999;
+  margin-top: 4px;
+  line-height: 1.6;
   width: 100%;
 }
-
-.image-preview-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.image-item {
-  position: relative;
-  width: 100px;
-  height: 100px;
-  border-radius: 8px;
-  overflow: hidden;
-  border: 1px solid #e5e5e5;
-}
-
-.preview-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.delete-btn {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: rgba(255, 107, 157, 0.9);
-  color: white;
-  border: none;
-  font-size: 14px;
-  line-height: 20px;
-  text-align: center;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.delete-btn:hover {
-  background: #ff6b9d;
-}
-
-.upload-box {
-  width: 100px;
-  height: 100px;
-  border: 1px dashed #ccc;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: border-color 0.2s ease;
-  background: #fff;
-}
-
-.upload-box:hover {
-  border-color: #ff6b9d;
-}
-
-.upload-label {
+.upload-trigger {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   width: 100%;
   height: 100%;
-  cursor: pointer;
   color: #666;
   font-size: 11px;
   transition: color 0.2s ease;
 }
-
-.upload-box:hover .upload-label {
-  color: #ff6b9d;
-}
-
-.upload-label .plus {
+.upload-trigger .plus {
   font-size: 24px;
   line-height: 1;
   margin-bottom: 4px;
   font-weight: 300;
 }
-
-.tips {
-  font-size: 12px;
-  color: #999;
-  margin-top: 10px;
+.goods-form :deep(.el-upload--picture-card),
+.goods-form :deep(.el-upload-list--picture-card .el-upload-list__item) {
+  width: 100px;
+  height: 100px;
+  border-radius: 8px;
+  border: 1px dashed #ccc;
+  background: #fff;
+}
+.goods-form :deep(.el-upload--picture-card:hover) {
+  border-color: #ff6b9d;
+}
+.goods-form :deep(.el-upload--picture-card:hover .upload-trigger) {
+  color: #ff6b9d;
+}
+.goods-form :deep(.el-upload-list--picture-card .el-upload-list__item) {
+  border: 1px solid #e5e5e5;
+}
+.goods-form :deep(.el-upload-list--picture-card .el-upload-list__item-delete:hover) {
+  background: rgba(255, 107, 157, 0.9);
 }
 
 /* ===== 提交按钮 ===== */
 .submit-area {
-  margin-top: 32px;
+  margin-top: 8px;
   text-align: center;
 }
-
-.submit-btn {
+.goods-submit.el-button {
   width: 100%;
   max-width: 200px;
   height: 44px;
@@ -593,41 +494,15 @@ select.form-input {
   border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
   box-shadow: 0 4px 12px rgba(255, 107, 157, 0.3);
+  transition: all 0.2s ease;
 }
-
-.submit-btn:hover:not(:disabled) {
+.goods-submit.el-button:not(.is-disabled):hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(255, 107, 157, 0.4);
 }
-
-.submit-btn:disabled {
+.goods-submit.el-button.is-loading {
   opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* ===== 提示信息 ===== */
-.message {
-  text-align: center;
-  padding: 12px 16px;
-  border-radius: 8px;
-  margin-top: 20px;
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.message.error {
-  color: #ff6b9d;
-  background: #fff5f8;
-  border: 1px solid #ffe0eb;
-}
-
-.message:not(.error) {
-  color: #52c41a;
-  background: #f6ffed;
-  border: 1px solid #b7eb8f;
 }
 
 /* ===== 响应式适配 ===== */
@@ -635,33 +510,16 @@ select.form-input {
   .publish-page {
     padding: 70px 16px 24px;
   }
-
   .publish-form {
     padding: 24px 20px;
   }
-
   .form-row {
     flex-direction: column;
     gap: 0;
   }
-
-  .submit-btn {
+  .goods-submit.el-button {
     max-width: 100%;
   }
-
-  .form-group {
-    margin-bottom: 16px;
-  }
-
-  .image-preview-list {
-    gap: 8px;
-  }
-
-  .image-item, .upload-box {
-    width: 80px;
-    height: 80px;
-  }
-
   .page-title {
     font-size: 20px;
     margin-bottom: 24px;

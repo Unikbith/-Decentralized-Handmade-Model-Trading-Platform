@@ -197,54 +197,36 @@
   </div>
 
   <!--通知详情弹窗-->
-  <div class="modal-overlay" v-show="showDetailModal" @click="closeDetailModal">
-    <div class="detail-modal" @click.stop>
-      <div class="modal-header">
-        <h3>通知详情</h3>
-        <button class="close-btn" @click="closeDetailModal">×</button>
-      </div>
-      <div class="modal-body">
-        <img
-          :src="currentNotification.goods_image || DEFAULT_PLACEHOLDER"
-          alt="商品图片"
-          class="modal-goods-img"
-          @error="handleImgError"
-        >
-        <p class="modal-content">{{ currentNotification.content }}</p>
-        <p class="modal-time">{{ currentNotification.sent_at }}</p>
-      </div>
-    </div>
-  </div>
+  <AppDialog v-model="showDetailModal" title="通知详情">
+    <img
+      :src="currentNotification.goods_image || DEFAULT_PLACEHOLDER"
+      alt="商品图片"
+      class="modal-goods-img"
+      @error="handleImgError"
+    >
+    <p class="modal-content">{{ currentNotification.content }}</p>
+    <p class="modal-time">{{ currentNotification.sent_at }}</p>
+  </AppDialog>
 
   <!--猜你喜欢弹窗-->
-  <div class="modal-overlay" v-show="showRecommendModal" @click="closeRecommendModal">
-    <div class="recommend-modal" @click.stop>
-      <div class="modal-header">
-        <h3> 猜你喜欢</h3>
-        <button class="close-btn" @click="closeRecommendModal">×</button>
-      </div>
-      <div class="recommend-body">
-        <div v-if="recommendLoading" class="recommend-loading">加载中...</div>
-        <div v-else-if="recommendGoods.length === 0" class="recommend-empty">
-          暂无推荐，快去浏览商品吧~
-        </div>
-        <div v-else class="recommend-grid">
-          <div 
-            v-for="goods in recommendGoods" 
-            :key="goods.id" 
-            class="recommend-card"
-            @click="goToGoodsDetail(goods.id)"
-          >
-            <img :src="goods.image" :alt="goods.name" class="recommend-img" @error="handleImgError">
-            <div class="recommend-info">
-              <p class="recommend-name">{{ goods.name }}</p>
-              <p class="recommend-price">¥{{ (goods.price || 0).toFixed(2) }}</p>
-            </div>
-          </div>
+  <AppDialog v-model="showRecommendModal" title="猜你喜欢">
+    <LoadingState v-if="recommendLoading" :spinner="false" message="加载中..." />
+    <EmptyState v-else-if="recommendGoods.length === 0" message="暂无推荐，快去浏览商品吧~" />
+    <div v-else class="recommend-grid">
+      <div
+        v-for="goods in recommendGoods"
+        :key="goods.id"
+        class="recommend-card"
+        @click="goToGoodsDetail(goods.id)"
+      >
+        <img :src="goods.image" :alt="goods.name" class="recommend-img" @error="handleImgError">
+        <div class="recommend-info">
+          <p class="recommend-name">{{ goods.name }}</p>
+          <p class="recommend-price">¥{{ (goods.price || 0).toFixed(2) }}</p>
         </div>
       </div>
     </div>
-  </div>
+  </AppDialog>
 </template>
 
 <script setup>
@@ -254,11 +236,13 @@ import request from '@/api/request';
 import DEFAULT_PLACEHOLDER from '@/assets/images/picture.png';
 import SERVICE_ICON from '@/assets/images/客服.svg';
 import { showConfirm } from '@/utils/modal';
+import AppDialog from '@/components/AppDialog.vue';
+import LoadingState from '@/components/LoadingState.vue';
+import EmptyState from '@/components/EmptyState.vue';
 
 const router = useRouter();
 
 //下拉菜单状态
-const showDropdown = ref(false);
 const showMobileMenu = ref(false);
 const showLeftDrawer = ref(false); // 左侧抽屉
 
@@ -453,11 +437,6 @@ const handleNotificationClick = async (notification) => {
   showNotificationPanel.value = false;
 };
 
-// 关闭详情弹窗
-const closeDetailModal = () => {
-  showDetailModal.value = false;
-};
-
 // 猜你喜欢相关
 const showRecommendModal = ref(false);
 const recommendGoods = ref([]);
@@ -465,7 +444,6 @@ const recommendLoading = ref(false);
 
 // 打开猜你喜欢弹窗
 const openRecommendModal = async () => {
-  showDropdown.value = false;
   showRecommendModal.value = true;
   recommendLoading.value = true;
   
@@ -479,11 +457,6 @@ const openRecommendModal = async () => {
   } finally {
     recommendLoading.value = false;
   }
-};
-
-// 关闭猜你喜欢弹窗
-const closeRecommendModal = () => {
-  showRecommendModal.value = false;
 };
 
 // 跳转商品详情
@@ -615,59 +588,12 @@ const goToProfile = () => {
   opacity: 0.8;
 }
 
-/* ===== 下拉菜单 ===== */
-.dropdown-menu {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  background: white;
-  min-width: 180px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  padding: 8px 0;
-  margin-top: 0;
-  animation: dropdownFade 0.2s ease;
-  z-index: 1001;
-}
-
-.dropdown-menu::before {
-  content: '';
-  position: absolute;
-  top: -6px;
-  left: 20px;
-  width: 12px;
-  height: 12px;
-  background: white;
-  transform: rotate(45deg);
-  border-top-left-radius: 2px;
-}
-
-.dropdown-item {
-  display: block;
-  padding: 12px 20px;
-  color: #333;
-  text-decoration: none;
-  font-size: 14px;
-  transition: all 0.3s ease;
-  border: none;
-  background: none;
-  width: 100%;
-  text-align: left;
-  box-sizing: border-box;
-  white-space: nowrap;
-}
-
-.dropdown-item:hover {
-  background-color: #f5f5f5;
-  color: #80acee;
-}
-
+/* ===== Logo样式 ===== */
 @keyframes dropdownFade {
   from { opacity: 0; transform: translateY(-5px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* ===== Logo样式 ===== */
 .logo {
   display: flex;
   align-items: center;
@@ -1032,49 +958,7 @@ const goToProfile = () => {
   animation: dropdownFade 0.2s ease;
 }
 
-/* === 用户下拉菜单样式 === */
-.user-dropdown-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  margin-left: 20px;
-  cursor: pointer;
-}
-
-.user-dropdown-menu {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background: white;
-  min-width: 150px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  padding: 8px 0;
-  margin-top: 0;
-  animation: dropdownFade 0.2s ease;
-  z-index: 1001;
-}
-
-.user-dropdown-menu::before {
-  content: '';
-  position: absolute;
-  top: -6px;
-  right: 20px;
-  width: 12px;
-  height: 12px;
-  background: white;
-  transform: rotate(45deg);
-  border-top-left-radius: 2px;
-}
-
-.dropdown-item-danger {
-  color: #ff4d4f !important;
-}
-
-.dropdown-item-danger:hover {
-  color: #ff7875 !important;
-}
-
+/* === 通知面板头部 === */
 .panel-header {
   display: flex;
   justify-content: space-between;
@@ -1195,44 +1079,7 @@ const goToProfile = () => {
   background: #a1a1a1;
 }
 
-/* ===== 通知详情弹窗 ===== */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10001;
-}
-
-.detail-modal {
-  background: white;
-  width: 90%;
-  max-width: 500px;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  border-bottom: 1px solid #eee;
-  background: #fafafa;
-}
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 18px;
-  color: #333;
-}
-
+/* ===== 通知详情弹窗内容 ===== */
 .close-btn {
   background: none;
   border: none;
@@ -1242,17 +1089,13 @@ const goToProfile = () => {
   padding: 0 8px;
 }
 
-.modal-body {
-  padding: 24px;
-  text-align: center;
-}
-
 .modal-goods-img {
+  display: block;
   width: 120px;
   height: 120px;
   object-fit: cover;
   border-radius: 8px;
-  margin-bottom: 16px;
+  margin: 0 auto 16px;
   border: 1px solid #eee;
 }
 
@@ -1262,12 +1105,14 @@ const goToProfile = () => {
   line-height: 1.6;
   margin: 0 0 12px;
   white-space: pre-line;
+  text-align: center;
 }
 
 .modal-time {
   font-size: 12px;
   color: #999;
   margin: 0;
+  text-align: center;
 }
 
 
@@ -1447,33 +1292,13 @@ const goToProfile = () => {
   }
 }
 
-/* ===== 猜你喜欢弹窗样式 ===== */
-.recommend-modal {
-  width: 90%;
-  max-width: 600px;
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  overflow: hidden;
-}
-
-.recommend-body {
-  padding: 20px;
-  max-height: 60vh;
-  overflow-y: auto;
-}
-
-.recommend-loading,
-.recommend-empty {
-  text-align: center;
-  padding: 40px;
-  color: #999;
-}
-
+/* ===== 猜你喜欢弹窗内容 ===== */
 .recommend-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
+  max-height: 60vh;
+  overflow-y: auto;
 }
 
 .recommend-card {
@@ -1515,32 +1340,10 @@ const goToProfile = () => {
   margin: 4px 0 0;
 }
 
-.dropdown-divider {
-  height: 1px;
-  background: #eee;
-  margin: 8px 12px;
-}
-
-.recommend-item {
-  color: #fb7299 !important;
-  font-weight: 500;
-}
-
 @media (max-width: 768px) {
   .recommend-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-}
-
-/* ===== 修复用户下拉菜单文字看不见的问题 ===== */
-.nav-links .user-dropdown-menu .dropdown-item {
-  color: #333 !important;
-  line-height: 1.5 !important;
-  margin-left: 0 !important;
-}
-
-.nav-links .user-dropdown-menu .dropdown-item-danger {
-  color: #ff4d4f !important;
 }
 
 /* ===== 左侧抽屉样式 - 优化平滑过渡 */

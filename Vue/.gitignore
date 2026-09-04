@@ -29,6 +29,9 @@ coverage
 
 *.tsbuildinfo
 
+# npm 项目内临时缓存（避免误推仓库）
+.npm-cache
+
 .env
 secret.key
 cert.pem

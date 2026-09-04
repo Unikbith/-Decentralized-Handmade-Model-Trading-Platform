@@ -1,533 +1,211 @@
 <template>
-  <div class="register-page">
-    <h1 class="page-title">账号注册</h1>
-    <div class="container">
-      <div class="register-card">
-        <div class="input-group">
-          <label class="input-label">用户名</label>
-          <input
-            type="text"
-            class="input-field"
-            placeholder="请输入昵称"
-            v-model="nickname"
-            :class="{ error: nicknameError }"
-          >
-          <p v-if="nicknameError" class="error-text">{{ nicknameErrorMsg || '请输入账号' }}</p>
-        </div>
+  <AuthLayout title="账号注册">
+    <el-form ref="formRef" :model="form" :rules="rules" class="auth-form" @submit.prevent>
+      <!-- ===== 用户名 ===== -->
+      <el-form-item prop="nickname">
+        <el-input v-model="form.nickname" class="auth-field" placeholder="请输入昵称" />
+      </el-form-item>
 
-        <div class="input-group">
-          <label class="input-label">账号</label>
-          <input
-            type="text"
-            class="input-field"
-            placeholder="请输入账号（字母/数字）"
-            v-model="username"
-            :class="{ error: usernameError }"
-          >
-          <p v-if="usernameError" class="error-text">{{ usernameErrorMsg || '请输入账号' }}</p>
-        </div>
+      <!-- ===== 账号 ===== -->
+      <el-form-item prop="username">
+        <el-input v-model="form.username" class="auth-field" placeholder="请输入账号（字母/数字）" />
+      </el-form-item>
 
-        <div class="input-group">
-          <label class="input-label">密码</label>
-          <input
-            type="password"
-            class="input-field"
-            placeholder="请输入密码（至少6位）"
-            v-model="password"
-            :class="{ error: passwordError }"
-          >
-          <p v-if="passwordError" class="error-text">{{ passwordErrorMsg || '请输入密码' }}</p>
-        </div>
+      <!-- ===== 密码 ===== -->
+      <el-form-item prop="password">
+        <el-input v-model="form.password" class="auth-field" type="password" placeholder="请输入密码（至少6位）" />
+      </el-form-item>
 
-        <div class="input-group">
-          <label class="input-label">确认密码</label>
-          <input
-            type="password"
-            class="input-field"
-            placeholder="请再次输入密码"
-            v-model="confirmPassword"
-            :class="{ error: confirmError }"
-          >
-          <p v-if="confirmError" class="error-text">两次密码不一致</p>
-        </div>
+      <!-- ===== 确认密码 ===== -->
+      <el-form-item prop="confirmPassword">
+        <el-input v-model="form.confirmPassword" class="auth-field" type="password" placeholder="请再次输入密码" />
+      </el-form-item>
 
-        <div class="input-group">
-          <label class="input-label">QQ邮箱</label>
-          <div class="email-row">
-            <input type="email" class="input-field email-input" placeholder="请输入QQ邮箱"
-              v-model="email" :class="{ error: emailError }">
-            <button class="code-btn" @click="handleSendCode"
-              :disabled="codeSending || countdown > 0">
-              {{ countdown > 0 ? countdown + 's' : '发送验证码' }}
-            </button>
-          </div>
-          <p v-if="emailError" class="error-text">{{ emailErrorMsg }}</p>
-        </div>
-
-        <div class="input-group">
-          <label class="input-label">验证码</label>
-          <input type="text" class="input-field" placeholder="请输入6位验证码"
-            v-model="code" :class="{ error: codeError }" maxlength="6">
-          <p v-if="codeError" class="error-text">请输入验证码</p>
-        </div>
-
-        <div class="role-buttons">
+      <!-- ===== QQ邮箱 + 发送验证码 ===== -->
+      <el-form-item prop="email">
+        <div class="email-row">
+          <el-input v-model="form.email" class="auth-field email-input" placeholder="请输入QQ邮箱" />
           <button
-            class="role-btn"
-            :class="{'active': selectedRole === 'merchant'}"
-            @click="selectRole('merchant')"
-          >
-            我是商家
-          </button>
-          <button
-            class="role-btn"
-            :class="{'active': selectedRole === 'user'}"
-            @click="selectRole('user')"
-          >
-            我是用户
-          </button>
+            type="button"
+            class="auth-code-btn"
+            :disabled="codeSending || countdown > 0"
+            @click="handleSendCode"
+          >{{ countdown > 0 ? countdown + 's' : '发送验证码' }}</button>
         </div>
-        <p v-if="roleError" class="error-text">请选择角色</p>
+      </el-form-item>
 
+      <!-- ===== 验证码 ===== -->
+      <el-form-item prop="code">
+        <el-input v-model="form.code" class="auth-field" placeholder="请输入6位验证码" maxlength="6" />
+      </el-form-item>
+
+      <!-- ===== 角色选择 ===== -->
+      <div class="role-buttons">
         <button
-          class="register-btn"
-          @click="handleRegister"
-          :disabled="loading"
-        >
-          {{ loading ? '注册中...' : '注册' }}
-        </button>
-
-        <div class="login-link">
-          已有账号？<span @click="$router.push('/login')">去登录</span>
-        </div>
-
-        <div v-if="message" class="message" :class="{'error': isError}">
-          {{ message }}
-        </div>
+          type="button"
+          class="role-btn"
+          :class="{ active: form.role === 'merchant' }"
+          @click="selectRole('merchant')"
+        >我是商家</button>
+        <button
+          type="button"
+          class="role-btn"
+          :class="{ active: form.role === 'user' }"
+          @click="selectRole('user')"
+        >我是用户</button>
       </div>
-    </div>
-  </div>
+
+      <!-- ===== 注册按钮 ===== -->
+      <el-button class="btn-primary" type="primary" :loading="loading" @click="handleRegister">
+        {{ loading ? '注册中...' : '注册' }}
+      </el-button>
+
+      <!-- ===== 登录链接 ===== -->
+      <div class="auth-link">
+        已有账号？<span class="span-bold" @click="$router.push('/login')">去登录</span>
+      </div>
+    </el-form>
+  </AuthLayout>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+// ===== 导入依赖 =====
+import { ref, reactive, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { ElMessage } from 'element-plus';
 import request from '@/api/request';
 import { showAlert } from '@/utils/modal';
+import AuthLayout from '@/components/AuthLayout.vue';
 
 const router = useRouter();
-
-//响应式数据定义
-const selectedRole = ref('user');
-const nickname = ref('');
-const username = ref('');
-const password = ref('');
-const confirmPassword = ref('');
-const email = ref('')
-const code = ref('')
-const codeSending = ref(false)
-const countdown = ref(0)
-const emailError = ref(false)
-const emailErrorMsg = ref('')
-const codeError = ref(false)
+const formRef = ref();
 const loading = ref(false);
-const message = ref('');
-const isError = ref(false);
+const codeSending = ref(false);
+const countdown = ref(0);
+let countdownTimer = null;
 
-const nicknameError = ref(false);
-const nicknameErrorMsg = ref('');
-const usernameError = ref(false);
-const usernameErrorMsg = ref('');
-const passwordError = ref(false);
-const passwordErrorMsg = ref('');
-const confirmError = ref(false);
-const roleError = ref(false);
-
-//角色选择方法
-function selectRole(role) {
-  selectedRole.value = role;
-  roleError.value = false;
-}
-
-//提示消息方法
-function showMessage(msg, error = true) {
-  message.value = msg;
-  isError.value = error;
-  setTimeout(() => {
-    message.value = '';
-  }, 3000);
-}
-
-//发送验证码
-async function handleSendCode() {
-  if (!email.value.trim() || !email.value.includes('@qq.com')) {
-    emailError.value = true
-    emailErrorMsg.value = '请输入正确的QQ邮箱'
-    return
-  }
-  codeSending.value = true
-  try {
-    const res = await request.post('/api/send_code', { email: email.value })
-    if (res.data.code === 200) {
-      await showAlert(res.data.msg, '', 'success')
-      countdown.value = 60
-      const timer = setInterval(() => {
-        countdown.value--
-        if (countdown.value <= 0) clearInterval(timer)
-      }, 1000)
-    } else {
-      await showAlert(res.data.msg, '', 'error')
-    }
-  } catch (err) {
-    await showAlert('网络错误', '', 'error')
-  } finally {
-    codeSending.value = false
-  }
-}
-
-//监听器：密码确认实时校验
-watch([password, confirmPassword], () => {
-  if (confirmPassword.value && password.value) {
-    confirmError.value = password.value !== confirmPassword.value;
-  }
+// ===== 响应式数据 =====
+const form = reactive({
+  role: 'user',
+  nickname: '',
+  username: '',
+  password: '',
+  confirmPassword: '',
+  email: '',
+  code: ''
 });
 
-function validateForm() {
-  let isValid = true;
-
-  if (!nickname.value.trim()){
-    nicknameError.value = true;
-    nicknameErrorMsg.value = '请输入昵称';
-    isValid = false;
+// ===== 自定义校验：确认密码一致性 =====
+function validateConfirm(rule, value, callback) {
+  if (!value) {
+    callback(new Error('请再次输入密码'));
+  } else if (value !== form.password) {
+    callback(new Error('两次密码不一致'));
   } else {
-    nicknameError.value = false;
+    callback();
   }
-
-  if (!username.value.trim()) {
-    usernameError.value = true;
-    usernameErrorMsg.value = '请输入账号';
-    isValid = false;
-  } else if (!/^[a-zA-Z0-9]{4,16}$/.test(username.value.trim())) {
-    usernameError.value = true;
-    usernameErrorMsg.value = '账号需为4-16位字母或数字';
-    isValid = false;
-  } else {
-    usernameError.value = false;
-  }
-
-
-  if (!password.value) {
-    passwordError.value = true;
-    passwordErrorMsg.value = '请输入密码';
-    isValid = false;
-  } else if (password.value.length < 6) {
-    passwordError.value = true;
-    passwordErrorMsg.value = '密码至少6位';
-    isValid = false;
-  } else {
-    passwordError.value = false;
-  }
-
-
-  if (confirmPassword.value && password.value !== confirmPassword.value) {
-    confirmError.value = true;
-    isValid = false;
-  } else {
-    confirmError.value = false;
-  }
-
-  // 验证角色
-  if (!selectedRole.value) {
-    roleError.value = true;
-    isValid = false;
-  } else {
-    roleError.value = false;
-  }
-  // 邮箱验证
-  if (!email.value.trim() || !email.value.includes('@qq.com')) {
-    emailError.value = true
-    emailErrorMsg.value = '请输入QQ邮箱'
-    isValid = false
-  } else {
-    emailError.value = false
-  }
-  // 验证码校验6位数字
-  if (!code.value.trim()) {
-    codeError.value = true
-    isValid = false
-  } else if (!/^\d{6}$/.test(code.value.trim())) {
-    codeError.value = true
-    showMessage('验证码必须是6位数字', true)
-    isValid = false
-  } else {
-    codeError.value = false
-  }
-  return isValid;
 }
 
-// 注册提交
-async function handleRegister() {
-  if (!validateForm()) {
-    showMessage('请完善注册信息', true);
+// ===== 自定义校验：QQ邮箱 =====
+function validateEmail(rule, value, callback) {
+  if (!value || !value.includes('@qq.com')) {
+    callback(new Error('请输入正确的QQ邮箱'));
+  } else {
+    callback();
+  }
+}
+
+// ===== 表单验证规则 =====
+const rules = {
+  nickname: [{ required: true, message: '请输入昵称', trigger: 'blur' }],
+  username: [
+    { required: true, message: '请输入账号', trigger: 'blur' },
+    { pattern: /^[a-zA-Z0-9]{4,16}$/, message: '账号需为4-16位字母或数字', trigger: 'blur' }
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, message: '密码至少6位', trigger: 'blur' }
+  ],
+  confirmPassword: [
+    { required: true, message: '请再次输入密码', trigger: 'blur' },
+    { validator: validateConfirm, trigger: 'blur' }
+  ],
+  email: [{ validator: validateEmail, trigger: 'blur' }],
+  code: [
+    { required: true, message: '请输入验证码', trigger: 'blur' },
+    { pattern: /^\d{6}$/, message: '验证码必须是6位数字', trigger: 'blur' }
+  ]
+};
+
+// ===== 角色选择 =====
+function selectRole(role) {
+  form.role = role;
+}
+
+// ===== 发送验证码 =====
+async function handleSendCode() {
+  if (!form.email.trim() || !form.email.includes('@qq.com')) {
+    ElMessage.warning('请输入正确的QQ邮箱');
     return;
   }
-
-  loading.value = true;
-  message.value = '';
-
+  codeSending.value = true;
   try {
-    const response = await request.post('/api/register', {
-      nickname: nickname.value,
-      username: username.value.trim(),
-      password: password.value,
-      role: selectedRole.value,
-      email: email.value,
-      code: code.value
-    });
-
-    if (response.data.code === 200) {
-      showMessage('注册成功，请登录！', false);
-      setTimeout(() => {
-        router.push('/login');
-      }, 1500);
+    const res = await request.post('/api/send_code', { email: form.email });
+    if (res.data.code === 200) {
+      await showAlert(res.data.msg, '', 'success');
+      countdown.value = 60;
+      countdownTimer = setInterval(() => {
+        countdown.value--;
+        if (countdown.value <= 0) clearInterval(countdownTimer);
+      }, 1000);
     } else {
-      showMessage(response.data.msg || '注册失败', true);
+      await showAlert(res.data.msg, '', 'error');
     }
-  } catch (error) {
-    console.error('注册请求失败：', error);
-    showMessage('网络错误，请稍后重试', true);
+  } catch (err) {
+    await showAlert('网络错误', '', 'error');
   } finally {
-    loading.value = false;
+    codeSending.value = false;
   }
 }
+
+// ===== 注册提交 =====
+async function handleRegister() {
+  formRef.value.validate(async (valid) => {
+    if (!valid) {
+      ElMessage.warning('请完善注册信息');
+      return;
+    }
+
+    loading.value = true;
+    try {
+      const response = await request.post('/api/register', {
+        nickname: form.nickname,
+        username: form.username.trim(),
+        password: form.password,
+        role: form.role,
+        email: form.email,
+        code: form.code
+      });
+
+      if (response.data.code === 200) {
+        ElMessage.success('注册成功，请登录！');
+        setTimeout(() => {
+          router.push('/login');
+        }, 1500);
+      } else {
+        ElMessage.error(response.data.msg || '注册失败');
+      }
+    } catch (error) {
+      console.error('注册请求失败：', error);
+      ElMessage.error('网络错误，请稍后重试');
+    } finally {
+      loading.value = false;
+    }
+  });
+}
+
+// ===== 生命周期：卸载时清除倒计时 =====
+onUnmounted(() => {
+  if (countdownTimer) clearInterval(countdownTimer);
+});
 </script>
-
-<style scoped>
-/* ===== 页面布局 ===== */
-.register-page {
-  min-height: 100vh;
-  padding: 40px 20px;
-  box-sizing: border-box;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-}
-
-/* ===== 页面标题 ===== */
-.page-title {
-  text-align: center;
-  color: #333;
-  font-size: 28px;
-  font-weight: 600;
-  margin-bottom: 50px;
-  letter-spacing: 1px;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-.container {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-}
-
-/* ===== 注册卡片 ===== */
-.register-card {
-  background-color: #fff;
-  padding: 40px 35px;
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-  width: 100%;
-  max-width: 420px;
-  box-sizing: border-box;
-}
-
-/* ===== 表单输入组 ===== */
-.input-group {
-  margin-bottom: 24px;
-  position: relative;
-}
-
-.input-label {
-  display: block;
-  margin-bottom: 8px;
-  color: #666;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.input-field {
-  width: 100%;
-  height: 48px;
-  padding: 0 16px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 15px;
-  color: #333;
-  box-sizing: border-box;
-  transition: all 0.3s ease;
-  outline: none;
-}
-
-.input-field:focus {
-  border-color: #82c3ff;
-  box-shadow: 0 0 0 3px rgba(130, 195, 255, 0.15);
-}
-
-.input-field::placeholder {
-  color: #bbb;
-}
-
-.input-field.error {
-  border-color: #ff4d4f;
-  box-shadow: 0 0 0 3px rgba(255, 77, 79, 0.1);
-}
-
-/* ===== 错误提示 ===== */
-.error-text {
-  color: #ff4d4f;
-  font-size: 12px;
-  margin-top: 4px;
-  margin-bottom: 0;
-  height: 16px;
-}
-
-/* ===== 角色按钮 ===== */
-.role-buttons {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-/* 角色按钮 - 统一浅蓝 */
-.role-btn {
-  flex: 1;
-  height: 44px;
-  border: none;
-  border-radius: 8px;
-  background-color: #f7f8fa;
-  color: #666;
-  font-size: 15px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-.role-btn.active {
-  background: linear-gradient(135deg, #82c3ff, #5fb3ff);
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(130, 195, 255, 0.25);
-}
-.role-btn:not(.active):hover {
-  background-color: #e8f3ff;
-  color: #82c3ff;
-}
-
-/* ===== 注册按钮 ===== */
-/* 注册按钮 - 浅蓝渐变 */
-.register-btn {
-  width: 100%;
-  height: 52px;
-  background: linear-gradient(135deg, #82c3ff, #5fb3ff);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  letter-spacing: 0.5px;
-  margin-bottom: 16px;
-  box-shadow: 0 4px 12px rgba(130, 195, 255, 0.25);
-}
-.register-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #5fb3ff, #4aa8ff);
-  box-shadow: 0 6px 16px rgba(130, 195, 255, 0.35);
-  transform: translateY(-1px);
-}
-.register-btn:active:not(:disabled) {
-  transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(130, 195, 255, 0.2);
-}
-.register-btn:disabled {
-  background: #c3e5ff;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
-/* ===== 登录链接 ===== */
-.login-link {
-  text-align: center;
-  color: #666;
-  font-size: 14px;
-  margin-bottom: 20px;
-}
-.login-link span {
-  color: #82c3ff;
-  cursor: pointer;
-  margin-left: 4px;
-  font-weight: 500;
-}
-.login-link span:hover {
-  text-decoration: underline;
-}
-
-/* ===== 提示消息 ===== */
-.message {
-  text-align: center;
-  padding: 8px 0;
-  border-radius: 4px;
-  font-size: 14px;
-}
-.message.error {
-  color: #ff4d4f;
-  background-color: #fff2f0;
-}
-.message:not(.error) {
-  color: #52c41a;
-  background-color: #f6ffed;
-}
-
-/* ===== 邮箱与验证码行 ===== */
-.email-row {
-  display: flex;
-  gap: 10px;
-}
-.email-input {
-  flex: 1;
-}
-.code-btn {
-  flex-shrink: 0;
-  padding: 0 16px;
-  height: 48px;
-  background: linear-gradient(135deg, #82c3ff, #5fb3ff);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.code-btn:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-}
-
-/* ===== 响应式适配 ===== */
-@media (max-width: 768px) {
-  .register-page {
-    padding: 30px 16px;
-  }
-  .register-card {
-    padding: 24px 20px;
-  }
-  .page-title {
-    font-size: 22px;
-    margin-bottom: 30px;
-  }
-  .input-field {
-    height: 44px;
-    font-size: 14px;
-  }
-  .register-btn {
-    height: 46px;
-    font-size: 15px;
-  }
-}
-</style>

@@ -1,19 +1,20 @@
-// 模态框实例引用
-let modalInstance = null
+import { ElMessageBox } from 'element-plus'
 
-// 设置模态框实例
-export function setModalInstance(instance) {
-  modalInstance = instance
-}
-
-// 显示Alert弹窗
+// 显示Alert弹窗：改用 Element Plus ElMessageBox，保持阻塞确认行为
 export function showAlert(msg, title = '提示', type = 'info') {
-  if (!modalInstance) return Promise.reject('modal not ready')
-  return modalInstance.showAlert(msg, title, type)
+  const boxType = type === 'confirm' ? 'warning' : type
+  return ElMessageBox.alert(msg, title, {
+    type: boxType,
+    confirmButtonText: '确定',
+    closeOnClickModal: false,
+  })
 }
 
-// 显示Confirm弹窗
+// 显示Confirm弹窗：确定=true，取消/关闭=false
 export function showConfirm(msg, title = '确认操作') {
-  if (!modalInstance) return Promise.reject('modal not ready')
-  return modalInstance.showConfirm(msg, title)
+  return ElMessageBox.confirm(msg, title, {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  }).then(() => true).catch(() => false)
 }

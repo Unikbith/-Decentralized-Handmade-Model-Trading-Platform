@@ -49,6 +49,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import QrcodeVue from 'qrcode.vue'
 import request from '@/api/request'
+import { PAY_GATEWAY_URL } from '@/config'
 
 const route = useRoute()
 const router = useRouter()
@@ -82,7 +83,7 @@ const getOrderInfo = async () => {
     const res = await request.get(`/api/order/public/${order_no}`)
     if (res.data.code === 200) {
       totalPrice.value = res.data.data.total_price
-      qrcodeUrl.value = `https://pay.anime-model.com/order/${order_no}?amount=${totalPrice.value}`
+      qrcodeUrl.value = `${PAY_GATEWAY_URL}/order/${order_no}?amount=${totalPrice.value}`
       loading.value = false
       startCountdown()
       startPolling()

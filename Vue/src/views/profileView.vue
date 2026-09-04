@@ -180,29 +180,19 @@
           </div>
 
           <div v-else class="history-list">
-            <div 
-              v-for="item in paginatedCollectList" 
-              :key="item.id" 
-              class="history-item"
+            <ProfileListRow
+              v-for="item in paginatedCollectList"
+              :key="item.id"
+              :image="item.image"
+              :name="item.name"
+              :price="(item.price || 0).toFixed(2)"
+              :meta="`收藏时间：${item.created_at}`"
               @click="goToGoodsDetail(item.goods_id)"
             >
-              <div class="goods-img">
-                <img :src="item.image" alt="商品图片" />
-              </div>
-              <div class="goods-info">
-                <h3 class="goods-name">{{ item.name }}</h3>
-                <p class="goods-price">¥{{ (item.price || 0).toFixed(2) }}</p>
-                <p class="browse-time">收藏时间：{{ item.created_at }}</p>
-              </div>
-              <div class="btn-container">
-                <button 
-                  class="btn-delete" 
-                  @click.stop="deleteCollect(item.id)"
-                >
-                  取消收藏
-                </button>
-              </div>
-            </div>
+              <template #actions>
+                <button class="btn-delete" @click.stop="deleteCollect(item.id)">取消收藏</button>
+              </template>
+            </ProfileListRow>
           </div>
           <!--收藏分页控件-->
           <Pagination 
@@ -214,32 +204,24 @@
         </div>
 
         <!--售后申请弹窗-->
-        <div v-if="showReturnModal" class="modal-mask" @click.self="showReturnModal = false">
-          <div class="modal-content return-modal">
-            <div class="modal-header">
-              <h3>申请售后</h3>
-              <span class="close-btn" @click="showReturnModal = false">&times;</span>
-            </div>
-            <div class="modal-body">
-              <div class="form-item">
-                <label>售后类型</label>
-                <div class="radio-group">
-                  <label class="radio-item" v-for="opt in returnTypeOptions" :key="opt.value">
-                    <input type="radio" :value="opt.value" v-model="returnForm.type" />{{ opt.label }}
-                  </label>
-                </div>
-              </div>
-              <div class="form-item">
-                <label>申请原因</label>
-                <textarea v-model="returnForm.reason" class="form-textarea" placeholder="请详细描述售后原因..." maxlength="500"></textarea>
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button class="cancel-btn" @click="showReturnModal = false">取消</button>
-              <button class="confirm-btn" @click="submitReturn">提交申请</button>
+        <AppDialog v-model="showReturnModal" title="申请售后" width="440px">
+          <div class="form-item">
+            <label>售后类型</label>
+            <div class="radio-group">
+              <label class="radio-item" v-for="opt in returnTypeOptions" :key="opt.value">
+                <input type="radio" :value="opt.value" v-model="returnForm.type" />{{ opt.label }}
+              </label>
             </div>
           </div>
-        </div>
+          <div class="form-item">
+            <label>申请原因</label>
+            <textarea v-model="returnForm.reason" class="form-textarea" placeholder="请详细描述售后原因..." maxlength="500"></textarea>
+          </div>
+          <template #footer>
+            <button class="cancel-btn" @click="showReturnModal = false">取消</button>
+            <button class="confirm-btn" @click="submitReturn">提交申请</button>
+          </template>
+        </AppDialog>
 
         <!--处理售后-->
         <div v-if="currentTab === 'returns'" class="content-panel">
@@ -294,42 +276,27 @@
           </div>
 
           <div v-else class="goods-list">
-            <div 
-              v-for="item in myGoodsList" 
-              :key="item.id" 
-              class="goods-item"
+            <ProfileListRow
+              v-for="item in myGoodsList"
+              :key="item.id"
+              :image="item.image"
+              :name="item.name"
+              :price="(item.price || 0).toFixed(2)"
+              :meta="`状态：${item.status}`"
               @click="goToEditGoods(item.id)"
             >
-              <div class="goods-img">
-                <img :src="item.image" alt="商品图片" />
-              </div>
-              <div class="goods-info">
-                <h3 class="goods-name">{{ item.name }}</h3>
-                <p class="goods-price">¥{{ (item.price || 0).toFixed(2) }}</p>
-                <p class="goods-status">状态：{{ item.status }}</p>
-              </div>
-              <div class="btn-container">
-                <button 
+              <template #actions>
+                <button
                   class="btn-toggle-status"
                   :class="{ 'btn-off-shelf': item.status !== '下架', 'btn-on-shelf': item.status === '下架' }"
                   @click.stop="toggleGoodsStatus(item)"
                 >
                   {{ item.status === '下架' ? '上架' : '下架' }}
                 </button>
-                <button 
-                  class="btn-edit" 
-                  @click.stop="goToEditGoods(item.id)"
-                >
-                  编辑
-                </button>
-                <button 
-                  class="btn-delete-goods" 
-                  @click.stop="deleteMyGoods(item.id)"
-                >
-                  删除
-                </button>
-              </div>
-            </div>
+                <button class="btn-edit" @click.stop="goToEditGoods(item.id)">编辑</button>
+                <button class="btn-delete-goods" @click.stop="deleteMyGoods(item.id)">删除</button>
+              </template>
+            </ProfileListRow>
           </div>
         </div>
 
@@ -431,29 +398,19 @@
           </div>
 
           <div v-else class="history-list">
-            <div 
-              v-for="item in paginatedHistoryList" 
-              :key="item.id" 
-              class="history-item"
+            <ProfileListRow
+              v-for="item in paginatedHistoryList"
+              :key="item.id"
+              :image="item.image"
+              :name="item.name"
+              :price="(item.price || 0).toFixed(2)"
+              :meta="`浏览时间：${item.browseTime}`"
               @click="goToGoodsDetail(item.goodsId)"
             >
-              <div class="goods-img">
-                <img :src="item.image" alt="商品图片" />
-              </div>
-              <div class="goods-info">
-                <h3 class="goods-name">{{ item.name }}</h3>
-                <p class="goods-price">¥{{ (item.price || 0).toFixed(2) }}</p>
-                <p class="browse-time">浏览时间：{{ item.browseTime }}</p>
-              </div>
-              <div class="btn-container">
-                <button 
-                  class="btn-delete" 
-                  @click.stop="deleteHistory(item.id)"
-                >
-                  删除
-                </button>
-              </div>
-            </div>
+              <template #actions>
+                <button class="btn-delete" @click.stop="deleteHistory(item.id)">删除</button>
+              </template>
+            </ProfileListRow>
           </div>
           <!-- 足迹分页控件 -->
           <Pagination 
@@ -539,6 +496,8 @@ import request from '@/api/request'
 import { regionData, codeToText } from "element-china-area-data"
 import { showAlert, showConfirm } from '@/utils/modal'
 import Pagination from '@/components/Pagination.vue'
+import AppDialog from '@/components/AppDialog.vue'
+import ProfileListRow from '@/components/ProfileListRow.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -1656,23 +1615,6 @@ watch(activeStatus, () => {
   border-bottom-color: #fb7299;
 }
 
-.apply-hint {
-  text-align: center;
-  padding: 20px 0;
-  color: #666;
-  font-size: 14px;
-  line-height: 1.6;
-}
-.apply-hint.success {
-  color: #52c41a;
-}
-.apply-hint.error {
-  color: #ff4d4f;
-}
-.apply-modal {
-  width: 400px;
-}
-
 /* ===== 订单卡片 ===== */
 .order-card {
   border: 1px solid #f0f0f0;
@@ -1908,77 +1850,7 @@ watch(activeStatus, () => {
   gap: 16px;
 }
 
-.goods-item, .history-item {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px;
-  border: 1px solid #f0f0f0;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: box-shadow 0.2s;
-  min-width: 0;
-}
-
-.goods-item:hover, .history-item:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.goods-img {
-  width: 100px;
-  height: 100px;
-  flex-shrink: 0;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.goods-img img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.goods-info { 
-  flex: 1;
-  min-width: 0;
-}
-
-.goods-name {
-  font-size: 16px;
-  font-weight: 500;
-  color: #333;
-  margin: 0 0 8px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.goods-price {
-  font-size: 18px;
-  font-weight: 600;
-  color: #ff6b9d;
-  margin: 0 0 8px;
-}
-
-.goods-status { 
-  font-size: 14px; 
-  color: #999; 
-  margin: 0; 
-}
-
-.browse-time { 
-  font-size: 14px; 
-  color: #999; 
-  margin: 0; 
-}
-
-/* ===== 按钮容器 ===== */
-.btn-container {
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
+/* ===== 按钮样式（列表项动作） ===== */
 .btn-edit {
   background: #fb7299;
   border: none;
@@ -2118,7 +1990,26 @@ watch(activeStatus, () => {
 .btn-group { margin-top: 24px; }
 
 /* ===== 售后弹窗 ===== */
-.return-modal { width: 440px; }
+:deep(.cancel-btn) {
+  flex: 1;
+  padding: 14px;
+  background: #f5f5f5;
+  color: #666;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+:deep(.confirm-btn) {
+  flex: 1;
+  padding: 14px;
+  background: #fb7299;
+  color: #fff;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+}
+
 .return-list {
   display: flex;
   flex-direction: column;
@@ -2171,37 +2062,6 @@ watch(activeStatus, () => {
   cursor: pointer;
 }
 .btn-reject:hover { border-color: #ff4d4f; color: #ff4d4f; }
-
-/* ===== 弹窗通用样式 ===== */
-.modal-mask {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
-.modal-content {
-  background: #fff;
-  border-radius: 12px;
-  width: 440px;
-  max-width: 90%;
-}
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
-  border-bottom: 1px solid #f0f0f0;
-}
-.modal-header h3 { margin: 0; font-size: 18px; color: #333; }
-.close-btn { font-size: 24px; color: #999; cursor: pointer; }
-.modal-body { padding: 24px 20px; }
-.modal-footer { display: flex; border-top: 1px solid #f0f0f0; }
-.modal-footer button { flex: 1; padding: 14px; border: none; font-size: 16px; cursor: pointer; }
-.cancel-btn { background: #f5f5f5; color: #666; }
-.confirm-btn { background: #fb7299; color: #fff; }
 
 /* ===== 响应式适配 ===== */
 @media (max-width: 768px) {
@@ -2263,18 +2123,11 @@ watch(activeStatus, () => {
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .goods-img {
-    width: 60px;
-    height: 60px;
-  }
   .panel-title {
     font-size: 16px;
   }
   .radio-group { flex-direction: column; gap: 12px; }
   .btn-secondary { margin-left: 0; margin-top: 12px; }
-  .history-item, .goods-item { flex-wrap: wrap; }
-  .goods-info { width: calc(100% - 116px); }
-  .btn-delete, .btn-edit { margin-left: auto; }
 }
 
 .status-tip {

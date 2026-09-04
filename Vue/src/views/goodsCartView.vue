@@ -3,13 +3,9 @@
     <div class="container">
       <h2 class="page-title">我的购物车</h2>
 
-      <div v-if="loading" class="loading-wrap">
-        <p>正在加载购物车...</p>
-      </div>
+      <LoadingState v-if="loading" message="正在加载购物车..." />
 
-      <div v-else-if="cartList.length === 0" class="empty-cart">
-        <p>购物车为空，快去挑选商品吧~</p>
-      </div>
+      <EmptyState v-else-if="cartList.length === 0" class="empty-cart" message="购物车为空，快去挑选商品吧~" />
 
       <!--购物车内容区 -->
       <div v-else class="cart-content">
@@ -50,6 +46,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import request from '@/api/request'
+import LoadingState from '@/components/LoadingState.vue'
+import EmptyState from '@/components/EmptyState.vue'
 import { showAlert, showConfirm } from '@/utils/modal'
 
 const router = useRouter()
@@ -144,16 +142,6 @@ onMounted(() => { getCartList() })
   text-align: center;
   color: #212121;
   margin: 0 0 30px;
-}
-
-/* ===== 加载&空状态 ===== */
-.loading-wrap, .empty-cart {
-  background: #fff;
-  border-radius: 12px;
-  padding: 100px 0;
-  text-align: center;
-  color: #999;
-  font-size: 16px;
 }
 
 /* ===== 购物车内容区 ===== */

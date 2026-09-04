@@ -19,10 +19,7 @@
     </div>
 
     <!--加载状态-->
-    <div v-if="loading" class="loading">
-      <div class="loading-spinner"></div>
-      <p>正在加载中...</p>
-    </div>
+    <LoadingState v-if="loading" message="正在加载中..." />
 
     <!--错误状态-->
     <div v-if="error" class="error">
@@ -38,9 +35,7 @@
       </div>
       
       <!--空状态-->
-      <div v-if="goodsList.length === 0" class="empty">
-        <p>暂无相关商品</p>
-      </div>
+      <EmptyState v-if="goodsList.length === 0" message="暂无相关商品" />
 
       <!--商品网格-->
       <div v-else class="goods-grid">
@@ -59,6 +54,9 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import request from '@/api/request'
 import GoodsCard from '@/components/goodsCard.vue'
+import LoadingState from '@/components/LoadingState.vue'
+import EmptyState from '@/components/EmptyState.vue'
+import GoodsGrid from '@/components/GoodsGrid.vue'
 
 const router = useRouter()
 
@@ -205,27 +203,6 @@ onUnmounted(() => {
   background: #f7507f;
 }
 
-/* ===== 加载状态 ===== */
-.loading {
-  text-align: center;
-  padding: 80px 20px;
-  color: #666;
-}
-
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid #e8e8e8;
-  border-top-color: #fb7299;
-  border-radius: 50%;
-  margin: 0 auto 16px;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
 /* ===== 错误状态 ===== */
 .error {
   text-align: center;
@@ -266,38 +243,16 @@ onUnmounted(() => {
   margin: 0;
 }
 
-/* ===== 空状态 ===== */
-.empty {
-  text-align: center;
-  padding: 60px 20px;
-  color: #999;
-}
-
-/* ===== 商品网格 ===== */
-.goods-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
-}
-
 /* ===== 响应式适配 ===== */
 @media (max-width: 1200px) {
   .search-page {
     padding: 80px 30px 40px;
-  }
-  .goods-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
   }
 }
 
 @media (max-width: 768px) {
   .search-page {
     padding: 70px 16px 24px;
-  }
-  .goods-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
   }
 }
 
@@ -312,10 +267,6 @@ onUnmounted(() => {
   .search-btn {
     width: 38px;
     height: 38px;
-  }
-  .goods-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
   }
 }
 </style>

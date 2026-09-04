@@ -44,56 +44,40 @@
         </div>
       </div>
 
-      <!--加载状态-->
-      <div v-if="loading" class="loading-wrap">
-        <p>正在加载商品...</p>
-      </div>
-      
-      <!--空状态-->
-      <div v-else-if="displayGoods.length === 0" class="empty-wrap">
-        <p>暂无商品，快去上架吧~</p>
-      </div>
-
-      <!--商品网格-->
-      <div v-else class="goods-grid">
-        <GoodsCard 
-          v-for="goods in displayGoods" 
-          :key="goods.id" 
+      <!--加载/空状态/商品网格-->
+      <LoadingState v-if="loading" message="正在加载商品..." />
+      <EmptyState v-else-if="displayGoods.length === 0" message="暂无商品，快去上架吧~" />
+      <GoodsGrid v-else>
+        <GoodsCard
+          v-for="goods in displayGoods"
+          :key="goods.id"
           :goods="goods"
         />
-      </div>
+      </GoodsGrid>
     </div>
 
     <!--猜你喜欢弹窗-->
-    <div v-if="showRecommendModal" class="modal-overlay" @click.self="closeRecommend">
-      <div class="modal-content modal-single">
-        <div class="modal-header">
-          <h3>猜你喜欢</h3>
-          <button class="close-btn" @click="closeRecommend">×</button>
-        </div>
-        <div class="modal-body">
-          <div v-if="recommendLoading" class="loading-wrap">
-            <p>正在分析您的偏好...</p>
-          </div>
-          <div v-else-if="recommendGoods.length === 0" class="empty-wrap">
-            <p>暂无推荐商品</p>
-          </div>
-          <div v-else class="recommend-single">
-            <GoodsCard 
-              :key="recommendGoods[0].id" 
-              :goods="recommendGoods[0]"
-            />
-          </div>
-        </div>
+    <AppDialog v-model="showRecommendModal" title="猜你喜欢" width="320px" gradient>
+      <LoadingState v-if="recommendLoading" :spinner="false" message="正在分析您的偏好..." />
+      <EmptyState v-else-if="recommendGoods.length === 0" message="暂无推荐商品" />
+      <div v-else class="recommend-single">
+        <GoodsCard
+          :key="recommendGoods[0].id"
+          :goods="recommendGoods[0]"
+        />
       </div>
-    </div>
+    </AppDialog>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import request from '@/api/request'
 import GoodsCard from '@/components/goodsCard.vue'
+import LoadingState from '@/components/LoadingState.vue'
+import EmptyState from '@/components/EmptyState.vue'
+import GoodsGrid from '@/components/GoodsGrid.vue'
+import AppDialog from '@/components/AppDialog.vue'
 import { showAlert } from '@/utils/modal'
 //swiper导入
 import { Swiper, SwiperSlide } from 'swiper/vue'
@@ -207,16 +191,9 @@ const openRecommend = async () => {
   }
 }
 
-const closeRecommend = () => {
-  showRecommendModal.value = false
-}
-
 //生命周期钩子
 onMounted(() => {
   getGoodsList()
-})
-
-onUnmounted(() => {
 })
 </script>
 
@@ -407,20 +384,7 @@ onUnmounted(() => {
   font-size: 16px;
 }
 
-/* ===== 加载和空状态 ===== */
-.loading-wrap, .empty-wrap {
-  text-align: center;
-  padding: 100px 0;
-  color: #999;
-  font-size: 16px;
-}
-
-/* ===== 商品网格 ===== */
-.goods-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
-}
+/* ===== 商品网格（滚动条下移即布局） ===== */
 
 /* ===== 响应式适配 ===== */
 @media (max-width: 1024px) {
@@ -448,10 +412,6 @@ onUnmounted(() => {
 @media (max-width: 768px) {
   .home-page {
     padding: 70px 16px;
-  }
-  .goods-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
   }
   
   /* ===== 轮播图响应式 ===== */
@@ -483,10 +443,6 @@ onUnmounted(() => {
 @media (max-width: 480px) {
   .home-page {
     padding: 60px 12px;
-  }
-  .goods-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
   }
   .page-title {
     font-size: 16px;
@@ -526,97 +482,11 @@ onUnmounted(() => {
   }
 }
 
-/* ===== 弹窗样式 ===== */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background: #fff;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 900px;
-  max-height: 80vh;
-  overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  border-bottom: 1px solid #eee;
-  background: linear-gradient(135deg, #fb7299, #ff9b7a);
-}
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 18px;
-  color: #fff;
-}
-
-.close-btn {
-  width: 32px;
-  height: 32px;
-  border: none;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 50%;
-  font-size: 20px;
-  color: #fff;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s;
-}
-
-.close-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.modal-body {
-  padding: 20px;
-  overflow-y: auto;
-  max-height: calc(80vh - 60px);
-}
-
 /* 单个商品卡片样式 */
-.modal-single {
-  max-width: 320px;
-}
-
 .recommend-single {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 16px;
-}
-
-.recommend-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-}
-
-@media (max-width: 768px) {
-  .recommend-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .modal-content {
-    width: 95%;
-  }
-  .modal-single {
-    max-width: 90%;
-  }
 }
 </style>

@@ -33,13 +33,9 @@
         </div>
       </div>
 
-      <div v-if="loading" class="loading-wrap">
-        <p>正在加载商品...</p>
-      </div>
+      <LoadingState v-if="loading" message="正在加载商品..." />
 
-      <div v-else-if="filteredGoods.length === 0" class="empty-wrap">
-        <p>该分类下暂无商品</p>
-      </div>
+      <EmptyState v-else-if="filteredGoods.length === 0" message="该分类下暂无商品" />
 
       <!--商品网格-->
       <div v-else class="goods-grid">
@@ -65,6 +61,9 @@
 import { ref, onMounted, computed } from 'vue'
 import request from '@/api/request'
 import GoodsCard from '@/components/goodsCard.vue'
+import LoadingState from '@/components/LoadingState.vue'
+import EmptyState from '@/components/EmptyState.vue'
+import GoodsGrid from '@/components/GoodsGrid.vue'
 import Pagination from '@/components/Pagination.vue'
 import { showAlert } from '@/utils/modal'
 
@@ -329,14 +328,6 @@ onMounted(() => {
   color: #80acee;
 }
 
-/* ===== 加载&空状态 ===== */
-.loading-wrap, .empty-wrap {
-  text-align: center;
-  padding: 100px 0;
-  color: #999;
-  font-size: 16px;
-}
-
 /* ===== 商品网格 ===== */
 .goods-grid {
   display: grid;
@@ -353,10 +344,6 @@ onMounted(() => {
 @media (max-width: 1200px) {
   .goods-page {
     padding: 80px 30px 40px;
-  }
-  .goods-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
   }
   .filter-drawer {
     width: 300px;
@@ -385,10 +372,6 @@ onMounted(() => {
 @media (max-width: 480px) {
   .goods-page {
     padding: 60px 12px 16px;
-  }
-  .goods-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
   }
   .page-title {
     font-size: 20px;

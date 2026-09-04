@@ -1,26 +1,21 @@
 <template>
-  <div v-if="!$route.meta.noGlobalLayout" class="app-container">
-    <Navbar />
-    <main class="content">
-      <router-view />
-    </main>
-    <Footer />
-  </div>
+  <el-config-provider :locale="zhCn">
+    <div v-if="!$route.meta.noGlobalLayout" class="app-container">
+      <Navbar />
+      <main class="content">
+        <router-view />
+      </main>
+      <Footer />
+    </div>
 
-  <router-view v-else />
-
-  <!-- 全局弹窗 -->
-  <ModalProvider ref="modalProviderRef" />
+    <router-view v-else />
+  </el-config-provider>
 </template>
 
 <script setup>
+import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import Navbar from './components/navbar.vue';
 import Footer from './components/Footer.vue';
-import { ref } from 'vue'
-import ModalProvider from '@/components/ModalProvider.vue'
-
-// 模态框引用
-const modalProviderRef = ref(null)
 </script>
 
 <style>
