@@ -1,14 +1,24 @@
-﻿
-# 敏感文件：本地加密密钥，绝不提交
-secret.key
-
-# Python 缓存与虚拟环境
+# Python
 __pycache__/
 *.py[cod]
+*.egg-info/
 .venv/
 venv/
+env/
+
+# 敏感文件（生产环境请勿提交）
+.env
+secret.key
+
+# 前端构建产物
+dist/
+node_modules/
 
 # IDE
 .idea/
 .vscode/
+*.swp
 
+# 系统文件
+.DS_Store
+Thumbs.db
